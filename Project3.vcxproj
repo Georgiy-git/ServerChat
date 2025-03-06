@@ -141,7 +141,6 @@
   <ItemGroup>
     <ClInclude Include="Server.hpp" />
     <ClInclude Include="Session.hpp" />
-    <ClInclude Include="Session1.hpp" />
     <ClInclude Include="sqlite3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

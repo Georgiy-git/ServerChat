@@ -9,6 +9,9 @@
 #include <streambuf>
 #include "sqlite3.h"
 #include <set>
+#include <fstream>
+
+class SessionAdmin;
 
 class Session : public std::enable_shared_from_this<Session> {
 
@@ -26,14 +29,24 @@ protected:
 	static int callback_author(void* x, int column, char** data, char** column_name);
 	static int callback_chats(void* x, int column, char** data, char** column_name);
 	static int callback_flag(void* x, int column, char** data, char** column_name);
+	static int callback_users_in_this_chat(void* x, int column, char** data, char** column_name);
+	static int callback_banlist(void* x, int column, char** data, char** column_name);
 
 	bool flag_sql {false}; //Флаг, найден ли пользователь в БД
 
 	//Чтение из потока в буфер
-	void read_from_buffer(const boost::system::error_code& error, std::size_t bytes);
+	virtual void read_from_buffer(const boost::system::error_code& error, std::size_t bytes);
+
+	void read_chunk_from_buffer(const boost::system::error_code& error, std::size_t bytess);
+
+	//Стандартное меню команд
+	void change(std::string line);
+
+	//Меню команд для админа
+	void change_admin(std::string);
 
 	//Отправка сообщения всем поользователям
-	void write_everyone(std::string& line);
+	void write_everyone(std::string line);
 
 	//Отправка сообщения в локальный чат
 	void write_local_chat(std::string& line);
@@ -45,7 +58,9 @@ protected:
 	void pruf(int ok, char* error);
 
 	//Преобразование теста в серверный
-	std::string sm(std::string& str);
+	std::string sm(std::string str);
+
+	void load_file_callback();
 
 	void _help();
 	void _users();
@@ -56,6 +71,15 @@ protected:
 	void _open_global_chat();
 	void _users_local();
 	void _delete_chat(std::string);
+	void _users_chat();
+	void _load_file(std::string);
+	void _load_file_to_user(std::string line);
+
+	void _admin_status();
+	void _kik(std::string);
+	void _ban(std::string);
+	void _unban(std::string);
+	void _banlist();
 
 public:
 	Session(boost::asio::ip::tcp::socket&& socket, std::unordered_set<std::shared_ptr<Session>>& clients);
@@ -65,6 +89,11 @@ public:
 	std::string password;
 	std::vector<std::string> chats;
 	std::string this_local_chat;
+	std::vector<std::string> users_in_this_chat;
+	std::string banlist_v;
+	std::ofstream file;
+	std::ifstream file_i;
+	std::string file_n;
 
 	//Отправляет текущему пользователю сообщение
 	void async_write(std::string message);
@@ -72,6 +101,6 @@ public:
 	//Чтение потока
 	void async_read();
 
-	//
-	void recive_files();
+	//Чтение файла
+	void async_recive_files();
 };
