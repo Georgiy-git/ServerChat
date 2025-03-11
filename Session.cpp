@@ -308,6 +308,7 @@ std::string Session::sm(std::string str)
 
 void Session::load_file_callback()
 {
+    //Принимает пакетами по 100 символов
     char v[100];
     std::streamsize size = file_i.read(v, 100).gcount();
 
@@ -395,7 +396,6 @@ void Session::_add_user_to_chat(std::string line)
     ok = sqlite3_exec(db, std::string("SELECT * FROM users WHERE login='" + user_name + "';").c_str(),
         callback_flag, this, &error_mess);
     pruf(ok, error_mess);
-    //std::cout << flag_sql << std::boolalpha << std::endl;
 
     if (flag_sql) {
 
@@ -403,7 +403,6 @@ void Session::_add_user_to_chat(std::string line)
         ok = sqlite3_exec(db, std::format("SELECT * FROM chats WHERE chat_name='{}' AND user_name='{}';",
             chat_name, user_name).c_str(), callback_flag, this, &error_mess);
         pruf(ok, error_mess);
-        //std::cout << flag_sql << std::boolalpha << std::endl;
 
         if (!flag_sql) {
             ok = sqlite3_exec(db, std::format("INSERT INTO chats (chat_name, user_name) VALUES ('{}', '{}');",
@@ -442,16 +441,22 @@ void Session::_open_global_chat()
 
 void Session::_users_local()
 {
-    int count = 1;
-    std::string users = "Users in "+this_local_chat+":";
-    for (const auto& i : clients) {
-        if (i->this_local_chat == this_local_chat) {
-            users += "<br>" + std::to_string(count) + '.' + i->name;
-            count++;
+    if (!this_local_chat.empty()) 
+    {
+        int count = 1;
+        std::string users = "Users in " + this_local_chat + ":";
+        for (const auto& i : clients) {
+            if (i->this_local_chat == this_local_chat) {
+                users += "<br>" + std::to_string(count) + '.' + i->name;
+                count++;
+            }
         }
+        async_write(sm(users));
+        async_read();
     }
-    async_write(sm(users));
-    async_read();
+    else {
+        async_write(sm("Available in local chat only"));
+    }
 }
 
 void Session::_delete_chat(std::string chat)

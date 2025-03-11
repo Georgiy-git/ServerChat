@@ -58,7 +58,7 @@ protected:
 	void pruf(int ok, char* error);
 
 	//Преобразование теста в серверный
-	std::string sm(std::string str);
+	inline std::string sm(std::string str);
 
 	void load_file_callback();
 

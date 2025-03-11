@@ -16,10 +16,10 @@ private:
 	std::unordered_set<std::shared_ptr<Session>> clients;
 
 public:
-
 	Server(B::io_context& io_context, int port) : 
 		io_context{ io_context }, acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {
 		std::cout << "—ервер запущен на порту " << port << std::endl;
+		std::cout << "—ервер текущей версии в логировании не обрабатывает кириллицу " << std::endl;
 	}
 
 	void async_accept() {
