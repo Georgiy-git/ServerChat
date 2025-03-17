@@ -31,6 +31,7 @@ protected:
 	static int callback_flag(void* x, int column, char** data, char** column_name);
 	static int callback_users_in_this_chat(void* x, int column, char** data, char** column_name);
 	static int callback_banlist(void* x, int column, char** data, char** column_name);
+	static int callback_load_local_history(void* x, int column, char** data, char** column_name);
 
 	bool flag_sql {false}; //Флаг, найден ли пользователь в БД
 

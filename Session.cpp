@@ -107,6 +107,21 @@ int Session::callback_banlist(void* x, int column, char** data, char** column_na
     return 0;
 }
 
+int Session::callback_load_local_history(void* x, int column, char** data, char** column_name)
+{
+    std::string _user_name{ data[0] };
+    std::string _message{ data[1] };
+    Session* obj = static_cast<Session*>(x);
+    if (obj->name != _user_name) 
+    {
+        obj->async_write("<span style='color: green;'><b>" + _user_name + ":</b></span> " + _message + '\n');
+    }
+    else {
+        obj->async_write("&MYMESSAGE&"+_message);
+    }
+    return 0;
+}
+
 void Session::read_from_buffer(const error_code& error, std::size_t bytes)
 {
     if (error) {
@@ -254,6 +269,9 @@ void Session::write_everyone(std::string line)
                 i->async_write("<span style='color: green;'><b>" + name + ":</b></span> " + line + '\n');
             }
         }
+        ok = sqlite3_exec(db, std::format("INSERT INTO {}_ (user_name, message) VALUES ('{}', '{}')",
+            this_local_chat, name, line).c_str(), nullptr, nullptr, &error_mess);
+        pruf(ok, error_mess);
     }
 
     async_read();
@@ -379,6 +397,9 @@ void Session::_create_chat(std::string line)
             line, name).c_str(), nullptr, nullptr, &error_mess);
         pruf(ok, error_mess);
         async_write("&CHATCREATEOK&"+line);
+        ok = sqlite3_exec(db, std::string("CREATE TABLE IF NOT EXISTS " + line + 
+            "_ (user_name TEXT, message TEXT)").c_str(), nullptr, nullptr, &error_mess);
+        pruf(ok, error_mess);
     }
     else {
         async_write("&CHATALREADYCREATED&");
@@ -431,6 +452,9 @@ void Session::_open_lockal_chat(std::string line)
     line.erase(0, line.rfind('&') + 1);
     this_local_chat = line;
     async_read();
+    ok = sqlite3_exec(db, std::format("SELECT * FROM {}_", line).c_str(),
+        callback_load_local_history, this, &error_mess);
+    pruf(ok, error_mess);
 }
 
 void Session::_open_global_chat()
